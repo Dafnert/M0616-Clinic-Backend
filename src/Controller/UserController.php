@@ -2,86 +2,59 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Routing\Annotation\Route;
+use App\Repository\userRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\user;
 
-#[Route('/api/users')]
-class UserController extends AbstractController
+
+#[Route(path: '/user')]
+final class userController extends AbstractController
 {
-    #[Route('', methods: ['GET'])]
-    public function index(EntityManagerInterface $em): JsonResponse
+    #[Route('/', name: 'app_user_create', methods: ['POST'])]
+    public function createuser(Request $request, userRepository $userRepository): JsonResponse
     {
-        $users = $em->getRepository(User::class)->findAll();
-
-        return $this->json($users, 200, [], ['groups' => ['user:read']]);
-    }
-
-    #[Route('/{id}', methods: ['GET'])]
-    public function show(User $user): JsonResponse
-    {
-        return $this->json($user, 200, [], ['groups' => ['user:read']]);
-    }
-
-    #[Route('', methods: ['POST'])]
-    public function create(
-        Request $request,
-        EntityManagerInterface $em,
-        UserPasswordHasherInterface $passwordHasher
-    ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
-        $user = new User();
-        $user->setEmail($data['email']);
-        $user->setRoles($data['roles'] ?? ['ROLE_PATIENT']);
-        $user->setPassword(
-            $passwordHasher->hashPassword($user, $data['password'])
-        );
-
-        $em->persist($user);
-        $em->flush();
-
-        return $this->json($user, 201, [], ['groups' => ['user:read']]);
-    }
-
-    #[Route('/{id}', methods: ['PUT'])]
-    public function update(
-        Request $request,
-        User $user,
-        EntityManagerInterface $em,
-        UserPasswordHasherInterface $passwordHasher
-    ): JsonResponse {
-        $data = json_decode($request->getContent(), true);
-
-        if (isset($data['email'])) {
-            $user->setEmail($data['email']);
+        if (
+            !isset($data['name']) ||
+            !isset($data['surname']) ||
+            !isset($data['age']) ||
+            !isset($data['speciality']) ||
+            !isset($data['username']) ||
+            !isset($data['password'])
+        ) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Missing required fields'
+            ], Response::HTTP_BAD_REQUEST);
         }
 
-        if (isset($data['roles'])) {
-            $user->setRoles($data['roles']);
-        }
+        $user = new user();
+        $user->setName($data['name']);
+        $user->setSurname($data['surname']);
+        $user->setAge($data['age']);
+        $user->setSpeciality($data['speciality']);
+        $user->setUsername($data['username']);
+        $user->setPassword($data['password']);
 
-        if (!empty($data['password'])) {
-            $user->setPassword(
-                $passwordHasher->hashPassword($user, $data['password'])
-            );
-        }
+        $userRepository->save($user, true);
 
-        $em->flush();
-
-        return $this->json($user, 200, [], ['groups' => ['user:read']]);
-    }
-
-    #[Route('/{id}', methods: ['DELETE'])]
-    public function delete(User $user, EntityManagerInterface $em): JsonResponse
-    {
-        $em->remove($user);
-        $em->flush();
-
-        return new JsonResponse(null, 204);
+        return $this->json([
+            'success' => true,
+            'message' => "user '{$user->getName()}' created successfully",
+            'data' => [
+                'id' => $user->getId(),
+                'name' => $user->getName(),
+                'surname' => $user->getSurname(),
+                'age' => $user->getAge(),
+                'speciality' => $user->getSpeciality(),
+                'username' => $user->getUsername(),
+            ]
+        ], Response::HTTP_CREATED);
     }
 }

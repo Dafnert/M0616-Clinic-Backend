@@ -2,49 +2,118 @@
 
 namespace App\Entity;
 
-use App\Repository\UserRepository;
+use App\Repository\userRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\Table(name: "user")]
-#[ORM\UniqueConstraint(name: "UNIQ_IDENTIFIER_EMAIL", fields: ["email"])]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+#[ORM\Entity(repositoryClass: userRepository::class)]
+class user
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["user:read"])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 180)]
-    #[Groups(["user:read"])]
-    private ?string $email = null;
+    #[ORM\Column(length: 50)]
+    private ?string $name = null;
+
+    #[ORM\Column(length: 50)]
+    private ?string $surname = null;
 
     #[ORM\Column]
-    #[Groups(["user:read"])]
-    private array $roles = [];
+    private ?int $age = null;
 
-    #[ORM\Column]
+    #[ORM\Column(length: 50)]
+    private ?string $speciality = null;
+
+    #[ORM\Column(length: 50)]
+    private ?string $username = null;
+
+    #[ORM\Column(length: 50)]
     private ?string $password = null;
 
-    public function getId(): ?int { return $this->id; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+  
+    public function setId(int $id): static
+    {
+        $this->id = $id;
 
-    public function getEmail(): ?string { return $this->email; }
+        return $this;
+    }
 
-    public function setEmail(string $email): static { $this->email = $email; return $this; }
 
-    public function getUserIdentifier(): string { return (string) $this->email; }
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
 
-    public function getRoles(): array { $roles = $this->roles; $roles[] = "ROLE_USER"; return array_unique($roles); }
+    public function setName(string $name): static
+    {
+        $this->name = $name;
 
-    public function setRoles(array $roles): static { $this->roles = $roles; return $this; }
+        return $this;
+    }
 
-    public function getPassword(): ?string { return $this->password; }
+    public function getSurname(): ?string
+    {
+        return $this->surname;
+    }
 
-    public function setPassword(string $password): static { $this->password = $password; return $this; }
+    public function setSurname(string $surname): static
+    {
+        $this->surname = $surname;
 
-    public function eraseCredentials(): void {}
+        return $this;
+    }
+
+    public function getAge(): ?int
+    {
+        return $this->age;
+    }
+
+    public function setAge(int $age): static
+    {
+        $this->age = $age;
+
+        return $this;
+    }
+
+    public function getSpeciality(): ?string
+    {
+        return $this->speciality;
+    }
+
+    public function setSpeciality(string $speciality): static
+    {
+        $this->speciality = $speciality;
+
+        return $this;
+    }
+
+    public function getUsername(): ?string
+    {
+        return $this->username;
+    }
+
+    public function setUsername(string $username): static
+    {
+        $this->username = $username;
+
+
+        return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+
+        return $this;
+    }
 }
