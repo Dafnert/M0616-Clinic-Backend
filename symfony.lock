@@ -5,7 +5,7 @@
             "repo": "github.com/symfony/recipes",
             "branch": "main",
             "version": "1.0",
-            "ref": "fdd756167454623e21f1d769c5b814b243782a67"
+            "ref": "87424683adc81d7dc305eefec1fced883084aab9"
         }
     },
     "doctrine/doctrine-bundle": {
@@ -80,6 +80,8 @@
             "./.editorconfig"
         ]
     },
+    "symfony/maker-bundle": {
+        "version": "1.66",
         "recipe": {
             "repo": "github.com/symfony/recipes",
             "branch": "main",
@@ -98,19 +100,6 @@
         "files": [
             "./config/packages/routing.yaml",
             "./config/routes.yaml"
-        ]
-    },
-    "symfony/security-bundle": {
-        "version": "7.4",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "main",
-            "version": "7.4",
-            "ref": "c42fee7802181cdd50f61b8622715829f5d2335c"
-        },
-        "files": [
-            "./config/packages/security.yaml",
-            "./config/routes/security.yaml"
         ]
     }
 }
