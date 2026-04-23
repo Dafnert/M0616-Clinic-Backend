@@ -2,18 +2,18 @@
 
 namespace App\Repository;
 
-use App\Entity\user;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-class userRepository extends ServiceEntityRepository
+class UserRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, user::class);
+        parent::__construct($registry, User::class);
     }
 
-    public function save(user $user, bool $flush = false): void
+    public function save(User $user, bool $flush = false): void
     {
         $this->getEntityManager()->persist($user);
         if ($flush) {
