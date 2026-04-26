@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\AppointmentRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -25,6 +27,19 @@ class Appointment
 
     #[ORM\Column(length: 255)]
     private ?string $observations = null;
+
+#[ORM\ManyToOne(targetEntity: Doctor::class, inversedBy: 'appointments')]
+#[ORM\JoinColumn(nullable: false)]
+private ?Doctor $doctor = null;
+
+#[ORM\ManyToMany(targetEntity: Treatment::class)]
+#[ORM\JoinTable(name: 'appointment_treatments')]
+private Collection $treatments;
+
+    public function __construct()
+    {
+        $this->treatments = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -75,6 +90,42 @@ class Appointment
     public function setObservations(string $observations): static
     {
         $this->observations = $observations;
+
+        return $this;
+    }
+
+    public function getDoctor(): ?Doctor
+    {
+        return $this->doctor;
+    }
+
+    public function setDoctor(?Doctor $doctor): static
+    {
+        $this->doctor = $doctor;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Treatment>
+     */
+    public function getTreatments(): Collection
+    {
+        return $this->treatments;
+    }
+
+    public function addTreatment(Treatment $treatment): static
+    {
+        if (!$this->treatments->contains($treatment)) {
+            $this->treatments->add($treatment);
+        }
+
+        return $this;
+    }
+
+    public function removeTreatment(Treatment $treatment): static
+    {
+        $this->treatments->removeElement($treatment);
 
         return $this;
     }
