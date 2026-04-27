@@ -2,11 +2,11 @@
 
 namespace App\Entity;
 
-use App\Repository\UserRepository;
+use App\Repository\PatientRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: UserRepository::class)]
-class User
+#[ORM\Entity(repositoryClass: PatientRepository::class)]
+class Patient
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -16,33 +16,19 @@ class User
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
-    #[ORM\Column(length: 50)]
-    private ?string $surname = null;
-
     #[ORM\Column]
     private ?int $age = null;
 
-    #[ORM\Column(length: 50)]
-    private ?string $speciality = null;
-
-    #[ORM\Column(length: 50)]
+    #[ORM\Column(length: 255)]
     private ?string $username = null;
 
-    #[ORM\Column(length: 50)]
+    #[ORM\Column(length: 255)]
     private ?string $password = null;
 
     public function getId(): ?int
     {
         return $this->id;
     }
-  
-    public function setId(int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
 
     public function getName(): ?string
     {
@@ -52,18 +38,6 @@ class User
     public function setName(string $name): static
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    public function getSurname(): ?string
-    {
-        return $this->surname;
-    }
-
-    public function setSurname(string $surname): static
-    {
-        $this->surname = $surname;
 
         return $this;
     }
@@ -80,18 +54,6 @@ class User
         return $this;
     }
 
-    public function getSpeciality(): ?string
-    {
-        return $this->speciality;
-    }
-
-    public function setSpeciality(string $speciality): static
-    {
-        $this->speciality = $speciality;
-
-        return $this;
-    }
-
     public function getUsername(): ?string
     {
         return $this->username;
@@ -100,7 +62,6 @@ class User
     public function setUsername(string $username): static
     {
         $this->username = $username;
-
 
         return $this;
     }

@@ -7,16 +7,65 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
-use App\Repository\userRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\user;
+use App\Entity\User;
 
 
 #[Route(path: '/user')]
-final class userController extends AbstractController
+final class UserController extends AbstractController
 {
+        #[Route('/login', name: 'app_patient_login', methods: ['POST'])]
+
+public function login(Request $request, UserRepository $userRepository): JsonResponse
+{
+    $data = json_decode($request->getContent(), true);
+
+    $username = $data['username'] ?? '';
+    $password = $data['password'] ?? '';
+
+    // Validación básica
+    if (empty($username) || empty($password)) {
+        return $this->json(
+            [
+                'success' => false,
+                'message' => 'Username and password are required',
+            ],
+            Response::HTTP_BAD_REQUEST
+        );
+    }
+
+    // Buscar usuario
+    $user = $userRepository->findOneBy(['username' => $username]);
+
+    // Verificar credenciales
+    if ($user && $user->getPassword() === $password) {
+        return $this->json(
+        [
+            'success' => true,
+            'message' => 'Success',
+            'user' => [
+                'id' => $user->getId(),
+                'name' => $user->getName(),
+                'age' => $user->getAge(),
+                'username' => $user->getUsername(),
+            ]
+        ],
+        Response::HTTP_OK
+    );
+       
+    }
+
+   return $this->json(
+            [
+                'success' => false,
+                'message' => 'Invalid credentials',
+            ],
+            Response::HTTP_NOT_FOUND
+        );
+}
     #[Route('/', name: 'app_user_create', methods: ['POST'])]
-    public function createuser(Request $request, userRepository $userRepository): JsonResponse
+    public function createuser(Request $request, UserRepository $userRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -34,7 +83,7 @@ final class userController extends AbstractController
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        $user = new user();
+        $user = new User();
         $user->setName($data['name']);
         $user->setSurname($data['surname']);
         $user->setAge($data['age']);
