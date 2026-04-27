@@ -13,55 +13,55 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route(path: '/patient')]
 final class PatientController extends AbstractController
 {
-    #[Route('/login', name: 'app_patient_login', methods: ['POST'])]
+//     #[Route('/login', name: 'app_patient_login', methods: ['POST'])]
 
-public function login(Request $request, PatientRepository $patientRepository): JsonResponse
-{
-    $data = json_decode($request->getContent(), true);
+// public function login(Request $request, PatientRepository $patientRepository): JsonResponse
+// {
+//     $data = json_decode($request->getContent(), true);
 
-    $username = $data['username'] ?? '';
-    $password = $data['password'] ?? '';
+//     $username = $data['username'] ?? '';
+//     $password = $data['password'] ?? '';
 
-    // Validación básica
-    if (empty($username) || empty($password)) {
-        return $this->json(
-            [
-                'success' => false,
-                'message' => 'Username and password are required',
-            ],
-            Response::HTTP_BAD_REQUEST
-        );
-    }
+//     // Validación básica
+//     if (empty($username) || empty($password)) {
+//         return $this->json(
+//             [
+//                 'success' => false,
+//                 'message' => 'Username and password are required',
+//             ],
+//             Response::HTTP_BAD_REQUEST
+//         );
+//     }
 
-    // Buscar usuario
-    $patient = $patientRepository->findOneBy(['username' => $username]);
+//     // Buscar usuario
+//     $patient = $patientRepository->findOneBy(['username' => $username]);
 
-    // Verificar credenciales
-    if ($patient && $patient->getPassword() === $password) {
-        return $this->json(
-        [
-            'success' => true,
-            'message' => 'Success',
-            'patient' => [
-                'id' => $patient->getId(),
-                'name' => $patient->getName(),
-                'age' => $patient->getAge(),
-                'username' => $patient->getUsername(),
-            ]
-        ],
-        Response::HTTP_OK
-    );
+//     // Verificar credenciales
+//     if ($patient && $patient->getPassword() === $password) {
+//         return $this->json(
+//         [
+//             'success' => true,
+//             'message' => 'Success',
+//             'patient' => [
+//                 'id' => $patient->getId(),
+//                 'name' => $patient->getName(),
+//                 'age' => $patient->getAge(),
+//                 'username' => $patient->getUsername(),
+//             ]
+//         ],
+//         Response::HTTP_OK
+//     );
        
-    }
+//     }
 
-   return $this->json(
-            [
-                'success' => false,
-                'message' => 'Invalid credentials',
-            ],
-            Response::HTTP_NOT_FOUND
-        );
-}
+//    return $this->json(
+//             [
+//                 'success' => false,
+//                 'message' => 'Invalid credentials',
+//             ],
+//             Response::HTTP_NOT_FOUND
+//         );
+// }
 
     #[Route('', name: 'app_patient_create', methods: ['POST'])]
     public function createPatient(Request $request, EntityManagerInterface $entityManager): JsonResponse
