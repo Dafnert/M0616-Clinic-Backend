@@ -15,55 +15,119 @@ use App\Entity\User;
 #[Route(path: '/user')]
 final class UserController extends AbstractController
 {
-        #[Route('/login', name: 'app_patient_login', methods: ['POST'])]
+    #[Route('/login', name: 'app_patient_login', methods: ['POST'])]
 
-public function login(Request $request, UserRepository $userRepository): JsonResponse
-{
-    $data = json_decode($request->getContent(), true);
+    public function login(Request $request, UserRepository $userRepository): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
 
-    $username = $data['username'] ?? '';
-    $password = $data['password'] ?? '';
+        $username = $data['username'] ?? '';
+        $password = $data['password'] ?? '';
 
-    // Validación básica
-    if (empty($username) || empty($password)) {
+        // Validación básica
+        if (empty($username) || empty($password)) {
+            return $this->json(
+                [
+                    'success' => false,
+                    'message' => 'Username and password are required',
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        // Buscar usuario
+        $user = $userRepository->findOneBy(['username' => $username]);
+
+        // Verificar credenciales
+        if ($user && $user->getPassword() === $password) {
+            return $this->json(
+                [
+                    'success' => true,
+                    'message' => 'Success',
+                    'user' => [
+                        'id' => $user->getId(),
+                        'name' => $user->getName(),
+                        'age' => $user->getAge(),
+                        'username' => $user->getUsername(),
+                    ]
+                ],
+                Response::HTTP_OK
+            );
+        }
+
         return $this->json(
-            [
-                'success' => false,
-                'message' => 'Username and password are required',
-            ],
-            Response::HTTP_BAD_REQUEST
-        );
-    }
-
-    // Buscar usuario
-    $user = $userRepository->findOneBy(['username' => $username]);
-
-    // Verificar credenciales
-    if ($user && $user->getPassword() === $password) {
-        return $this->json(
-        [
-            'success' => true,
-            'message' => 'Success',
-            'user' => [
-                'id' => $user->getId(),
-                'name' => $user->getName(),
-                'age' => $user->getAge(),
-                'username' => $user->getUsername(),
-            ]
-        ],
-        Response::HTTP_OK
-    );
-       
-    }
-
-   return $this->json(
             [
                 'success' => false,
                 'message' => 'Invalid credentials',
             ],
             Response::HTTP_NOT_FOUND
         );
-}
+    }
+
+    #[Route('/{id}', name: 'app_user_get', methods: ['GET'])]
+    public function getUserById(int $id, UserRepository $userRepository): JsonResponse
+    {
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            return $this->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json([
+            'success' => true,
+            'data' => [
+                'id' => $user->getId(),
+                'name' => $user->getName(),
+                'surname' => $user->getSurname(),
+                'age' => $user->getAge(),
+                'speciality' => $user->getSpeciality(),
+                'username' => $user->getUsername(),
+            ]
+        ], Response::HTTP_OK);
+    }
+
+    #[Route('/{id}', name: 'app_user_update', methods: ['PUT'])]
+    public function updateUser(int $id, Request $request, UserRepository $userRepository, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            return $this->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (isset($data['name']))       $user->setName($data['name']);
+        if (isset($data['surname']))    $user->setSurname($data['surname']);
+        if (isset($data['age']))        $user->setAge($data['age']);
+        if (isset($data['speciality'])) $user->setSpeciality($data['speciality']);
+        if (isset($data['username']))   $user->setUsername($data['username']);
+        if (isset($data['password']) && !empty($data['password'])) {
+            $user->setPassword($data['password']);
+        }
+
+        $em->flush();
+
+        return $this->json([
+            'success' => true,
+            'message' => 'User updated successfully',
+            'data' => [
+                'id' => $user->getId(),
+                'name' => $user->getName(),
+                'surname' => $user->getSurname(),
+                'age' => $user->getAge(),
+                'speciality' => $user->getSpeciality(),
+                'username' => $user->getUsername(),
+            ]
+        ], Response::HTTP_OK);
+    }
+
     #[Route('/', name: 'app_user_create', methods: ['POST'])]
     public function createuser(Request $request, UserRepository $userRepository): JsonResponse
     {
