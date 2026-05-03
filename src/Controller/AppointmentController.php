@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route(path: '/appointment')]
 final class AppointmentController extends AbstractController
 {
-    #[Route('', name: 'app_appointment_index', methods: ['GET'])]
+    #[Route('/', name: 'app_appointment_index', methods: ['GET'])]
     public function index(AppointmentRepository $appointmentRepository): JsonResponse
     {
         $appointments = $appointmentRepository->findAll();

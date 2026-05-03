@@ -29,7 +29,7 @@ class Appointment
     private ?string $observations = null;
 
 #[ORM\ManyToOne(targetEntity: Doctor::class, inversedBy: 'appointments')]
-#[ORM\JoinColumn(nullable: false)]
+#[ORM\JoinColumn(nullable: true)]
 private ?Doctor $doctor = null;
 
 #[ORM\ManyToMany(targetEntity: Treatment::class)]
