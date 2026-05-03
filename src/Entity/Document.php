@@ -3,7 +3,6 @@
 namespace App\Entity;
 
 use App\Repository\DocumentRepository;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: DocumentRepository::class)]
@@ -15,52 +14,35 @@ class Document
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $title = null;
+    private ?string $filename = null;
 
-    #[ORM\Column(type: Types::TEXT)]
-    private ?string $content = null;
+    #[ORM\Column(length: 255)]
+    private ?string $originalName = null;
+
+    #[ORM\Column(length: 100)]
+    private ?string $mimeType = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    private ?\DateTimeImmutable $uploadedAt = null;
 
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Patient $patient = null;
 
-    public function getTitle(): ?string
-    {
-        return $this->title;
-    }
+    public function getId(): ?int { return $this->id; }
 
-    public function setTitle(string $title): static
-    {
-        $this->title = $title;
+    public function getFilename(): ?string { return $this->filename; }
+    public function setFilename(string $filename): static { $this->filename = $filename; return $this; }
 
-        return $this;
-    }
+    public function getOriginalName(): ?string { return $this->originalName; }
+    public function setOriginalName(string $o): static { $this->originalName = $o; return $this; }
 
-    public function getContent(): ?string
-    {
-        return $this->content;
-    }
+    public function getMimeType(): ?string { return $this->mimeType; }
+    public function setMimeType(string $m): static { $this->mimeType = $m; return $this; }
 
-    public function setContent(string $content): static
-    {
-        $this->content = $content;
+    public function getUploadedAt(): ?\DateTimeImmutable { return $this->uploadedAt; }
+    public function setUploadedAt(\DateTimeImmutable $d): static { $this->uploadedAt = $d; return $this; }
 
-        return $this;
-    }
-
-    public function getCreatedAt(): ?\DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
-
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
-    {
-        $this->createdAt = $createdAt;
-
-        return $this;
-    }
+    public function getPatient(): ?Patient { return $this->patient; }
+    public function setPatient(?Patient $p): static { $this->patient = $p; return $this; }
 }

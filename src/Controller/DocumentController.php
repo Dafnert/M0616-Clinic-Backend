@@ -2,146 +2,119 @@
 
 namespace App\Controller;
 
-use App\Entity\Document;
-use App\Repository\DocumentRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Repository\DocumentRepository;
+use App\Repository\PatientRepository;
+use App\Entity\Document;
+use Doctrine\ORM\EntityManagerInterface;
 
-#[Route('/api/documents')] 
-
-
+#[Route('/document')]
 final class DocumentController extends AbstractController
 {
-    private function documentToArray(Document $document): array
-    {
-        return [
-            'id' => $document->getId(),
-            'title' => $document->getTitle(), 
-            'content' => $document->getContent(),
-            'createdAt' => $document->getCreatedAt()?->format(DATE_ATOM),
-        ];
-    }
-
-    // GET /api/documents
-    #[Route('', name: 'documents_list', methods: ['GET'])]
-    public function list(DocumentRepository $repository): JsonResponse
-    {
-        $documents = $repository->findAll();
-
-
-        $result = array_map(
-            fn (Document $d) => $this->documentToArray($d),
-            $documents
-        );
-
-        return $this->json($result);
-    }
-
-    // GET /api/documents/1
-    #[Route('/{id}', name: 'documents_get', methods: ['GET'])]
-    public function getOne(int $id, DocumentRepository $repository): JsonResponse
-    {
-        $document = $repository->find($id);
-
-        if (!$document) {
-            return $this->json(['error' => 'Document no trobat'], Response::HTTP_NOT_FOUND);
+    #[Route('/upload/{patientId}', name: 'document_upload', methods: ['POST'])]
+    public function upload(
+        int $patientId,
+        Request $request,
+        PatientRepository $patientRepository,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $patient = $patientRepository->find($patientId);
+        if (!$patient) {
+            return $this->json(['success' => false, 'message' => 'Patient not found'], Response::HTTP_NOT_FOUND);
         }
 
-        return $this->json($this->documentToArray($document));
-    }
-
-    // POST /api/documents
-    #[Route('', name: 'documents_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $em): JsonResponse
-    {
-        $data = json_decode($request->getContent(), true);
-
-        if (!is_array($data)) {
-            return $this->json(['error' => 'JSON invàlid'], Response::HTTP_BAD_REQUEST);
+        $file = $request->files->get('file');
+        if (!$file) {
+            return $this->json(['success' => false, 'message' => 'No file uploaded'], Response::HTTP_BAD_REQUEST);
         }
 
-        $title = trim((string)($data['title'] ?? ''));
-        $content = trim((string)($data['content'] ?? ''));
+        $originalName = $file->getClientOriginalName();
+        $mimeType = $file->getMimeType();
+        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
 
-        if ($title === '' || $content === '') {
-            return $this->json(
-                ['error' => 'Falten camps obligatoris: title, content'],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
+        $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads';
+        $file->move($uploadDir, $filename);
 
         $document = new Document();
-        $document->setTitle($title);
-        $document->setContent($content);
-
-        // Si tu entidad usa DateTimeImmutable (recomendado)
-        $document->setCreatedAt(new \DateTimeImmutable());
+        $document->setFilename($filename);
+        $document->setOriginalName($originalName);
+        $document->setMimeType($mimeType);
+        $document->setUploadedAt(new \DateTimeImmutable());
+        $document->setPatient($patient);
 
         $em->persist($document);
         $em->flush();
 
-        return $this->json($this->documentToArray($document), Response::HTTP_CREATED);
+        return $this->json([
+            'success' => true,
+            'message' => 'File uploaded successfully',
+            'data' => [
+                'id' => $document->getId(),
+                'originalName' => $document->getOriginalName(),
+                'mimeType' => $document->getMimeType(),
+                'uploadedAt' => $document->getUploadedAt()->format('d/m/Y H:i'),
+            ]
+        ], Response::HTTP_CREATED);
     }
 
-    // PUT /api/documents/1
-    #[Route('/{id}', name: 'documents_update', methods: ['PUT'])]
-    public function update(int $id, Request $request, DocumentRepository $repository, EntityManagerInterface $em): JsonResponse
-    {
-        $document = $repository->find($id);
+    #[Route('/patient/{patientId}', name: 'document_list', methods: ['GET'])]
+    public function listByPatient(
+        int $patientId,
+        DocumentRepository $documentRepository
+    ): JsonResponse {
+        $documents = $documentRepository->findBy(['patient' => $patientId]);
 
-        if (!$document) {
-            return $this->json(['error' => 'Document no trobat'], Response::HTTP_NOT_FOUND);
-        }
+        $data = array_map(fn($d) => [
+            'id' => $d->getId(),
+            'originalName' => $d->getOriginalName(),
+            'mimeType' => $d->getMimeType(),
+            'uploadedAt' => $d->getUploadedAt()->format('d/m/Y H:i'),
+        ], $documents);
 
-        $data = json_decode($request->getContent(), true);
-
-        if (!is_array($data)) {
-            return $this->json(['error' => 'JSON invàlid'], Response::HTTP_BAD_REQUEST);
-        }
-
-        if (array_key_exists('title', $data)) {
-            $title = trim((string)$data['title']);
-            if ($title === '') {
-                return $this->json(['error' => 'title no pot estar buit'], Response::HTTP_BAD_REQUEST);
-            }   
-            $document->setTitle($title);
-        }
-
-        if (array_key_exists('content', $data)) {
-            $content = trim((string)$data['content']);
-            if ($content === '') {
-                return $this->json(['error' => 'content no pot estar buit'], Response::HTTP_BAD_REQUEST);
-            }
-            $document->setContent($content);
-        }
-
-        $em->flush();
-
-        return $this->json($this->documentToArray($document));
+        return $this->json(['success' => true, 'data' => $data]);
     }
 
-    // DELETE /api/documents/1
-    #[Route('/{id}', name: 'documents_delete', methods: ['DELETE'])]
-    public function delete(int $id, DocumentRepository $repository, EntityManagerInterface $em): JsonResponse
-    {
-        $document = $repository->find($id);
-
+    #[Route('/download/{id}', name: 'document_download', methods: ['GET'])]
+    public function download(
+        int $id,
+        DocumentRepository $documentRepository
+    ): Response {
+        $document = $documentRepository->find($id);
         if (!$document) {
-            return $this->json(['error' => 'Document no trobat'], Response::HTTP_NOT_FOUND);
+            return $this->json(['success' => false, 'message' => 'Document not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $filePath = $this->getParameter('kernel.project_dir') . '/public/uploads/' . $document->getFilename();
+        if (!file_exists($filePath)) {
+            return $this->json(['success' => false, 'message' => 'File not found on server'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->file($filePath, $document->getOriginalName());
+    }
+
+    #[Route('/{id}', name: 'document_delete', methods: ['DELETE'])]
+    public function delete(
+        int $id,
+        DocumentRepository $documentRepository,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $document = $documentRepository->find($id);
+        if (!$document) {
+            return $this->json(['success' => false, 'message' => 'Document not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $filePath = $this->getParameter('kernel.project_dir') . '/public/uploads/' . $document->getFilename();
+        if (file_exists($filePath)) {
+            unlink($filePath);
         }
 
         $em->remove($document);
         $em->flush();
 
-        return $this->json(null, Response::HTTP_NO_CONTENT);
+        return $this->json(['success' => true, 'message' => 'Document deleted successfully']);
     }
-
-    
-
-
-
 }
