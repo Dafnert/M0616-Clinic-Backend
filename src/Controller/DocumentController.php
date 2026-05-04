@@ -34,6 +34,23 @@ final class DocumentController extends AbstractController
 
         $originalName = $file->getClientOriginalName();
         $mimeType = $file->getMimeType();
+
+        $allowedMimeTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+        if (!in_array($mimeType, $allowedMimeTypes)) {
+            return $this->json(
+                ['success' => false, 'message' => 'Invalid file type. Only PDF and images (PNG, JPG) are allowed'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        $maxFileSize = 5 * 1024 * 1024;
+        if ($file->getSize() > $maxFileSize) {
+            return $this->json(
+                ['success' => false, 'message' => 'File size exceeds maximum limit of 5MB'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
         $filename = uniqid() . '.' . $file->getClientOriginalExtension();
 
         $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads';
