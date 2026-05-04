@@ -23,6 +23,7 @@ final class StockController extends AbstractController
             'quantity' => $stock->getQuantity(),
             'minimumQuantity' => $stock->getMinimumQuantity(),
             'unit' => $stock->getUnit(),
+            'isLow' => $stock->getQuantity() < $stock->getMinimumQuantity(),
             'createdAt' => $stock->getCreatedAt()?->format(DATE_ATOM),
             'updatedAt' => $stock->getUpdatedAt()?->format(DATE_ATOM),
         ];
@@ -75,11 +76,22 @@ final class StockController extends AbstractController
             );
         }
 
+        $quantity = (int)$data['quantity'];
+        $minimumQuantity = (int)$data['minimumQuantity'];
+
+        if ($quantity < 0) {
+            return $this->json(['error' => 'quantity cannot be negative'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($minimumQuantity <= 0) {
+            return $this->json(['error' => 'minimumQuantity must be greater than 0'], Response::HTTP_BAD_REQUEST);
+        }
+
         $stock = new Stock();
         $stock->setName($name);
         $stock->setDescription($data['description'] ?? null);
-        $stock->setQuantity((int)$data['quantity']);
-        $stock->setMinimumQuantity((int)$data['minimumQuantity']);
+        $stock->setQuantity($quantity);
+        $stock->setMinimumQuantity($minimumQuantity);
         $stock->setUnit($unit);
         $stock->setCreatedAt(new \DateTimeImmutable());
 
@@ -118,11 +130,19 @@ final class StockController extends AbstractController
         }
 
         if (array_key_exists('quantity', $data)) {
-            $stock->setQuantity((int)$data['quantity']);
+            $quantity = (int)$data['quantity'];
+            if ($quantity < 0) {
+                return $this->json(['error' => 'quantity cannot be negative'], Response::HTTP_BAD_REQUEST);
+            }
+            $stock->setQuantity($quantity);
         }
 
         if (array_key_exists('minimumQuantity', $data)) {
-            $stock->setMinimumQuantity((int)$data['minimumQuantity']);
+            $minimumQuantity = (int)$data['minimumQuantity'];
+            if ($minimumQuantity <= 0) {
+                return $this->json(['error' => 'minimumQuantity must be greater than 0'], Response::HTTP_BAD_REQUEST);
+            }
+            $stock->setMinimumQuantity($minimumQuantity);
         }
 
         if (array_key_exists('unit', $data)) {
