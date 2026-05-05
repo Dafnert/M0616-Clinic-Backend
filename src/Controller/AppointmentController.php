@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Appointment;
 use App\Repository\AppointmentRepository;
+use App\Repository\DoctorRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -50,7 +51,7 @@ final class AppointmentController extends AbstractController
     }
 
     #[Route('', name: 'app_appointment_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function create(Request $request, EntityManagerInterface $entityManager, DoctorRepository $doctorRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -68,6 +69,18 @@ final class AppointmentController extends AbstractController
             $appointment->setHourVisit(new \DateTime($data['hourVisit']));
             $appointment->setReason($data['reason']);
             $appointment->setObservations($data['observations']);
+
+            // Asignar doctor si se proporciona doctorId
+            if (!empty($data['doctorId'])) {
+                $doctor = $doctorRepository->find($data['doctorId']);
+                if (!$doctor) {
+                    return $this->json([
+                        'success' => false,
+                        'message' => 'Doctor not found',
+                    ], Response::HTTP_NOT_FOUND);
+                }
+                $appointment->setDoctor($doctor);
+            }
 
             $entityManager->persist($appointment);
             $entityManager->flush();
@@ -158,12 +171,19 @@ final class AppointmentController extends AbstractController
 
     private function appointmentToArray(Appointment $appointment): array
     {
+        $doctor = $appointment->getDoctor();
         return [
             'id' => $appointment->getId(),
             'date' => $appointment->getDate()?->format('Y-m-d'),
             'hourVisit' => $appointment->getHourVisit()?->format('H:i:s'),
             'reason' => $appointment->getReason(),
             'observations' => $appointment->getObservations(),
+            'doctor' => $doctor ? [
+                'id' => $doctor->getId(),
+                'name' => $doctor->getName(),
+                'surname' => $doctor->getSurname(),
+                'speciality' => $doctor->getSpeciality(),
+            ] : null,
         ];
     }
 }
