@@ -49,6 +49,7 @@ final class UserController extends AbstractController
                         'name' => $user->getName(),
                         'age' => $user->getAge(),
                         'username' => $user->getUsername(),
+                        'role' => $user->getRole(),
                     ]
                 ],
                 Response::HTTP_OK
@@ -85,6 +86,7 @@ final class UserController extends AbstractController
                 'age' => $user->getAge(),
                 'speciality' => $user->getSpeciality(),
                 'username' => $user->getUsername(),
+                'role' => $user->getRole(),
             ]
         ], Response::HTTP_OK);
     }
@@ -111,6 +113,9 @@ final class UserController extends AbstractController
         if (isset($data['password']) && !empty($data['password'])) {
             $user->setPassword($data['password']);
         }
+        if (isset($data['role']) && in_array($data['role'], ['ADMIN', 'DOCTOR'])) {
+            $user->setRole($data['role']);
+        }
 
         $em->flush();
 
@@ -124,6 +129,7 @@ final class UserController extends AbstractController
                 'age' => $user->getAge(),
                 'speciality' => $user->getSpeciality(),
                 'username' => $user->getUsername(),
+                'role' => $user->getRole(),
             ]
         ], Response::HTTP_OK);
     }
@@ -147,6 +153,14 @@ final class UserController extends AbstractController
             ], Response::HTTP_BAD_REQUEST);
         }
 
+        $role = $data['role'] ?? 'DOCTOR';
+        if (!in_array($role, ['ADMIN', 'DOCTOR'])) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Invalid role. Must be ADMIN or DOCTOR'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
         $user = new User();
         $user->setName($data['name']);
         $user->setSurname($data['surname']);
@@ -154,6 +168,7 @@ final class UserController extends AbstractController
         $user->setSpeciality($data['speciality']);
         $user->setUsername($data['username']);
         $user->setPassword($data['password']);
+        $user->setRole($role);
 
         $userRepository->save($user, true);
 
@@ -167,6 +182,7 @@ final class UserController extends AbstractController
                 'age' => $user->getAge(),
                 'speciality' => $user->getSpeciality(),
                 'username' => $user->getUsername(),
+                'role' => $user->getRole(),
             ]
         ], Response::HTTP_CREATED);
     }
