@@ -31,6 +31,9 @@ class User
     #[ORM\Column(length: 50)]
     private ?string $password = null;
 
+    #[ORM\Column(length: 20)]
+    private string $role = 'DOCTOR';
+
     public function getId(): ?int
     {
         return $this->id;
@@ -113,6 +116,18 @@ class User
     public function setPassword(string $password): static
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    public function getRole(): string
+    {
+        return $this->role;
+    }
+
+    public function setRole(string $role): static
+    {
+        $this->role = $role;
 
         return $this;
     }
