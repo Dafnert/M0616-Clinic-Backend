@@ -149,7 +149,7 @@ final class UserController extends AbstractController
         ], Response::HTTP_OK);
     }
 
-    #[Route('/', name: 'app_user_create', methods: ['POST'])]
+    #[Route('', name: 'app_user_create', methods: ['POST'])]
     public function createuser(Request $request, UserRepository $userRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -200,5 +200,26 @@ final class UserController extends AbstractController
                 'role' => $user->getRole(),
             ]
         ], Response::HTTP_CREATED);
+    }
+
+    #[Route('/{id}', name: 'app_user_delete', methods: ['DELETE'])]
+    public function deleteUser(int $id, UserRepository $userRepository, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            return $this->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $em->remove($user);
+        $em->flush();
+
+        return $this->json([
+            'success' => true,
+            'message' => 'User deleted successfully'
+        ], Response::HTTP_OK);
     }
 }
