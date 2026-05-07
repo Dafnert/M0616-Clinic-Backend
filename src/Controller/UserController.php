@@ -15,6 +15,21 @@ use App\Entity\User;
 #[Route(path: '/user')]
 final class UserController extends AbstractController
 {
+    #[Route('', name: 'user_list', methods: ['GET'])]
+    public function list(UserRepository $userRepository): JsonResponse
+    {
+        $users = $userRepository->findAll();
+
+        $data = array_map(fn($u) => [
+            'id'       => $u->getId(),
+            'name'     => $u->getName(),
+            'username' => $u->getUsername(),
+            'role'     => $u->getRole(),
+        ], $users);
+
+        return $this->json($data);
+    }
+
     #[Route('/login', name: 'app_patient_login', methods: ['POST'])]
 
     public function login(Request $request, UserRepository $userRepository): JsonResponse
