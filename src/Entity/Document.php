@@ -22,6 +22,9 @@ class Document
     #[ORM\Column(length: 100)]
     private ?string $mimeType = null;
 
+    #[ORM\Column(type: 'blob', nullable: true)]
+    private string|null $fileData = null;
+
     #[ORM\Column]
     private ?\DateTimeImmutable $uploadedAt = null;
 
@@ -39,6 +42,10 @@ class Document
 
     public function getMimeType(): ?string { return $this->mimeType; }
     public function setMimeType(string $m): static { $this->mimeType = $m; return $this; }
+
+    /** @return string|null */
+    public function getFileData(): string|null { return $this->fileData; }
+    public function setFileData(string $fileData): static { $this->fileData = $fileData; return $this; }
 
     public function getUploadedAt(): ?\DateTimeImmutable { return $this->uploadedAt; }
     public function setUploadedAt(\DateTimeImmutable $d): static { $this->uploadedAt = $d; return $this; }

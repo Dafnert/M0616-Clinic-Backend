@@ -34,32 +34,13 @@ final class DocumentController extends AbstractController
 
         $originalName = $file->getClientOriginalName();
         $mimeType = $file->getMimeType();
-
-        $allowedMimeTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
-        if (!in_array($mimeType, $allowedMimeTypes)) {
-            return $this->json(
-                ['success' => false, 'message' => 'Invalid file type. Only PDF and images (PNG, JPG) are allowed'],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-
-        $maxFileSize = 5 * 1024 * 1024;
-        if ($file->getSize() > $maxFileSize) {
-            return $this->json(
-                ['success' => false, 'message' => 'File size exceeds maximum limit of 5MB'],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-
-        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-
-        $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads';
-        $file->move($uploadDir, $filename);
+        $fileData = file_get_contents($file->getPathname());
 
         $document = new Document();
-        $document->setFilename($filename);
+        $document->setFilename(uniqid() . '.' . $file->getClientOriginalExtension());
         $document->setOriginalName($originalName);
         $document->setMimeType($mimeType);
+        $document->setFileData($fileData);
         $document->setUploadedAt(new \DateTimeImmutable());
         $document->setPatient($patient);
 
@@ -105,12 +86,18 @@ final class DocumentController extends AbstractController
             return $this->json(['success' => false, 'message' => 'Document not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $filePath = $this->getParameter('kernel.project_dir') . '/public/uploads/' . $document->getFilename();
-        if (!file_exists($filePath)) {
-            return $this->json(['success' => false, 'message' => 'File not found on server'], Response::HTTP_NOT_FOUND);
+        $fileData = $document->getFileData();
+        if (is_resource($fileData)) {
+            $fileData = stream_get_contents($fileData);
         }
 
-        return $this->file($filePath, $document->getOriginalName());
+        $response = new Response($fileData);
+        $response->headers->set('Content-Type', $document->getMimeType());
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $document->getOriginalName() . '"');
+        $response->headers->set('Access-Control-Allow-Origin', '*');
+        $response->headers->set('Access-Control-Expose-Headers', 'Content-Disposition, Content-Type');
+
+        return $response;
     }
 
     #[Route('/{id}', name: 'document_delete', methods: ['DELETE'])]
@@ -122,11 +109,6 @@ final class DocumentController extends AbstractController
         $document = $documentRepository->find($id);
         if (!$document) {
             return $this->json(['success' => false, 'message' => 'Document not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        $filePath = $this->getParameter('kernel.project_dir') . '/public/uploads/' . $document->getFilename();
-        if (file_exists($filePath)) {
-            unlink($filePath);
         }
 
         $em->remove($document);
