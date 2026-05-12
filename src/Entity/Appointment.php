@@ -28,13 +28,17 @@ class Appointment
     #[ORM\Column(length: 255)]
     private ?string $observations = null;
 
-#[ORM\ManyToOne(targetEntity: Doctor::class, inversedBy: 'appointments')]
-#[ORM\JoinColumn(nullable: true)]
-private ?Doctor $doctor = null;
+    #[ORM\ManyToOne(targetEntity: Doctor::class, inversedBy: 'appointments')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Doctor $doctor = null;
 
-#[ORM\ManyToMany(targetEntity: Treatment::class)]
-#[ORM\JoinTable(name: 'appointment_treatments')]
-private Collection $treatments;
+    #[ORM\ManyToOne(targetEntity: Patient::class, inversedBy: 'appointments')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Patient $patient = null;
+
+    #[ORM\ManyToMany(targetEntity: Treatment::class)]
+    #[ORM\JoinTable(name: 'appointment_treatments')]
+    private Collection $treatments;
 
     public function __construct()
     {
@@ -126,6 +130,18 @@ private Collection $treatments;
     public function removeTreatment(Treatment $treatment): static
     {
         $this->treatments->removeElement($treatment);
+
+        return $this;
+    }
+
+    public function getPatient(): ?Patient
+    {
+        return $this->patient;
+    }
+
+    public function setPatient(?Patient $patient): static
+    {
+        $this->patient = $patient;
 
         return $this;
     }
