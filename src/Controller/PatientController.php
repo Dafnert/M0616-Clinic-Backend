@@ -10,58 +10,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+
 #[Route(path: '/patient')]
 final class PatientController extends AbstractController
 {
-//     #[Route('/login', name: 'app_patient_login', methods: ['POST'])]
 
-// public function login(Request $request, PatientRepository $patientRepository): JsonResponse
-// {
-//     $data = json_decode($request->getContent(), true);
-
-//     $username = $data['username'] ?? '';
-//     $password = $data['password'] ?? '';
-
-//     // Validación básica
-//     if (empty($username) || empty($password)) {
-//         return $this->json(
-//             [
-//                 'success' => false,
-//                 'message' => 'Username and password are required',
-//             ],
-//             Response::HTTP_BAD_REQUEST
-//         );
-//     }
-
-//     // Buscar usuario
-//     $patient = $patientRepository->findOneBy(['username' => $username]);
-
-//     // Verificar credenciales
-//     if ($patient && $patient->getPassword() === $password) {
-//         return $this->json(
-//         [
-//             'success' => true,
-//             'message' => 'Success',
-//             'patient' => [
-//                 'id' => $patient->getId(),
-//                 'name' => $patient->getName(),
-//                 'age' => $patient->getAge(),
-//                 'username' => $patient->getUsername(),
-//             ]
-//         ],
-//         Response::HTTP_OK
-//     );
-       
-//     }
-
-//    return $this->json(
-//             [
-//                 'success' => false,
-//                 'message' => 'Invalid credentials',
-//             ],
-//             Response::HTTP_NOT_FOUND
-//         );
-// }
 
     #[Route('', name: 'app_patient_create', methods: ['POST'])]
     public function createPatient(Request $request, EntityManagerInterface $entityManager): JsonResponse
@@ -102,7 +55,7 @@ final class PatientController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_patient_read', methods: ['GET'])]
+    #[Route('/patient/{id}', name: 'app_patient_read', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function readById(int $id, PatientRepository $patientRepository): JsonResponse
     {
         $patient = $patientRepository->find($id);
@@ -203,5 +156,33 @@ final class PatientController extends AbstractController
             ],
             Response::HTTP_OK
         );
+    }
+
+    #[Route('/list', name: 'get_all_patients', methods: ['GET'])]
+    public function getAllPatients(PatientRepository $patientRepository): JsonResponse
+    {
+        try {
+
+            $patients = $patientRepository->findAll();
+
+            $data = [];
+
+            foreach ($patients as $patient) {
+
+                $data[] = [
+                    'id' => $patient->getId(),
+                    'name' => $patient->getName(),
+                    'age' => $patient->getAge(),
+                    'disease' => $patient->getDisease(),
+                ];
+            }
+
+            return new JsonResponse($data);
+        } catch (\Exception $e) {
+
+            return new JsonResponse([
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
