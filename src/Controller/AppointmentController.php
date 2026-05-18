@@ -10,6 +10,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Repository\PatientRepository;
+
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(path: '/appointment')]
@@ -19,7 +21,7 @@ final class AppointmentController extends AbstractController
     public function index(AppointmentRepository $appointmentRepository): JsonResponse
     {
         $appointments = $appointmentRepository->findAll();
-        
+
         $data = array_map(function (Appointment $appointment) {
             return $this->appointmentToArray($appointment);
         }, $appointments);
@@ -50,17 +52,37 @@ final class AppointmentController extends AbstractController
         ], Response::HTTP_OK);
     }
 
+
     #[Route('', name: 'app_appointment_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager, DoctorRepository $doctorRepository): JsonResponse
-    {
+    public function create(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        DoctorRepository $doctorRepository,
+        PatientRepository $patientRepository  // ← añadir
+    ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
-        // Validación básica
         if (!isset($data['date'], $data['hourVisit'], $data['reason'], $data['observations'])) {
             return $this->json([
                 'success' => false,
                 'message' => 'date, hourVisit, reason, and observations are required',
             ], Response::HTTP_BAD_REQUEST);
+        }
+
+        // ← Validar que viene patientId
+        if (empty($data['patientId'])) {
+            return $this->json([
+                'success' => false,
+                'message' => 'patientId is required',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $patient = $patientRepository->find($data['patientId']);
+        if (!$patient) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Patient not found',
+            ], Response::HTTP_NOT_FOUND);
         }
 
         try {
@@ -69,15 +91,12 @@ final class AppointmentController extends AbstractController
             $appointment->setHourVisit(new \DateTime($data['hourVisit']));
             $appointment->setReason($data['reason']);
             $appointment->setObservations($data['observations']);
+            $appointment->setPatient($patient);  // ← añadir
 
-            // Asignar doctor si se proporciona doctorId
             if (!empty($data['doctorId'])) {
                 $doctor = $doctorRepository->find($data['doctorId']);
                 if (!$doctor) {
-                    return $this->json([
-                        'success' => false,
-                        'message' => 'Doctor not found',
-                    ], Response::HTTP_NOT_FOUND);
+                    return $this->json(['success' => false, 'message' => 'Doctor not found'], Response::HTTP_NOT_FOUND);
                 }
                 $appointment->setDoctor($doctor);
             }
@@ -93,7 +112,7 @@ final class AppointmentController extends AbstractController
         } catch (\Exception $e) {
             return $this->json([
                 'success' => false,
-                'message' => 'Error creating appointment: ' . $e->getMessage(),
+                'message' => 'Error: ' . $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         }
     }
