@@ -11,12 +11,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route(path: '/patient')]
 final class PatientController extends AbstractController
 {
-
-
-    #[Route('', name: 'app_patient_create', methods: ['POST'])]
+    #[Route('/patient', name: 'app_patient_create', methods: ['POST'])]
     public function createPatient(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -47,8 +44,11 @@ final class PatientController extends AbstractController
                 'patient' => [
                     'id' => $patient->getId(),
                     'name' => $patient->getName(),
+                    'surname' => $patient->getSurname(),
                     'age' => $patient->getAge(),
                     'username' => $patient->getUsername(),
+                    'dni' => $patient->getDni(),
+                    'disease' => $patient->getDisease(),
                 ]
             ],
             Response::HTTP_CREATED
@@ -56,6 +56,7 @@ final class PatientController extends AbstractController
     }
 
     #[Route('/patient/{id}', name: 'app_patient_read', methods: ['GET'], requirements: ['id' => '\d+'])]
+
     public function readById(int $id, PatientRepository $patientRepository): JsonResponse
     {
         $patient = $patientRepository->find($id);
@@ -76,15 +77,19 @@ final class PatientController extends AbstractController
                 'patient' => [
                     'id' => $patient->getId(),
                     'name' => $patient->getName(),
+                    'surname' => $patient->getSurname(),
                     'age' => $patient->getAge(),
                     'username' => $patient->getUsername(),
+                    'dni' => $patient->getDni(),
+                    'disease' => $patient->getDisease(),
                 ]
             ],
             Response::HTTP_OK
         );
     }
 
-    #[Route('/{id}', name: 'app_patient_update', methods: ['PUT'])]
+    #[Route('/patient/{id}', name: 'app_patient_update', methods: ['PUT'])]
+    #[Route('/api/patients/{id}', name: 'api_patient_update', methods: ['PUT'])]
     public function updatePatient(int $id, Request $request, PatientRepository $patientRepository, EntityManagerInterface $entityManager): JsonResponse
     {
         $patient = $patientRepository->find($id);
@@ -101,18 +106,11 @@ final class PatientController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        if (isset($data['name'])) {
-            $patient->setName($data['name']);
-        }
-        if (isset($data['age'])) {
-            $patient->setAge($data['age']);
-        }
-        if (isset($data['username'])) {
-            $patient->setUsername($data['username']);
-        }
-        if (isset($data['password'])) {
-            $patient->setPassword($data['password']);
-        }
+        if (isset($data['name']))     $patient->setName($data['name']);
+        if (isset($data['surname']))  $patient->setSurname($data['surname']);
+        if (isset($data['age']))      $patient->setAge($data['age']);
+        if (isset($data['username'])) $patient->setUsername($data['username']);
+        if (isset($data['password'])) $patient->setPassword($data['password']);
 
         $entityManager->flush();
 
@@ -123,15 +121,18 @@ final class PatientController extends AbstractController
                 'patient' => [
                     'id' => $patient->getId(),
                     'name' => $patient->getName(),
+                    'surname' => $patient->getSurname(),
                     'age' => $patient->getAge(),
                     'username' => $patient->getUsername(),
+                    'dni' => $patient->getDni(),
+                    'disease' => $patient->getDisease(),
                 ]
             ],
             Response::HTTP_OK
         );
     }
 
-    #[Route('/{id}', name: 'app_patient_delete', methods: ['DELETE'])]
+    #[Route('/patient/{id}', name: 'app_patient_delete', methods: ['DELETE'])]
     public function deleteById(int $id, PatientRepository $patientRepository, EntityManagerInterface $entityManager): JsonResponse
     {
         $patient = $patientRepository->find($id);
@@ -158,7 +159,8 @@ final class PatientController extends AbstractController
         );
     }
 
-    #[Route('/list', name: 'get_all_patients', methods: ['GET'])]
+    #[Route('/patient/list', name: 'get_all_patients', methods: ['GET'])]
+    #[Route('/api/patients', name: 'api_patients_list', methods: ['GET'])]
     public function getAllPatients(PatientRepository $patientRepository): JsonResponse
     {
         try {

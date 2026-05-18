@@ -18,6 +18,9 @@ class Patient
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $surname = null;
+
     #[ORM\Column]
     private ?int $age = null;
 
@@ -73,6 +76,9 @@ class Patient
 
         return $this;
     }
+
+    public function getSurname(): ?string { return $this->surname; }
+    public function setSurname(?string $surname): static { $this->surname = $surname; return $this; }
 
     public function getUsername(): ?string
     {

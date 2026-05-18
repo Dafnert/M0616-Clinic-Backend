@@ -69,15 +69,15 @@ final class AppointmentController extends AbstractController
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        // ← Validar que viene patientId
-        if (empty($data['patientId'])) {
+        $patientId = $data['patient_id'] ?? $data['patientId'] ?? null;
+        if (empty($patientId)) {
             return $this->json([
                 'success' => false,
-                'message' => 'patientId is required',
+                'message' => 'patient_id is required',
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        $patient = $patientRepository->find($data['patientId']);
+        $patient = $patientRepository->find($patientId);
         if (!$patient) {
             return $this->json([
                 'success' => false,
@@ -93,8 +93,9 @@ final class AppointmentController extends AbstractController
             $appointment->setObservations($data['observations']);
             $appointment->setPatient($patient);  // ← añadir
 
-            if (!empty($data['doctorId'])) {
-                $doctor = $doctorRepository->find($data['doctorId']);
+            $doctorId = $data['doctor_id'] ?? $data['doctorId'] ?? null;
+            if (!empty($doctorId)) {
+                $doctor = $doctorRepository->find($doctorId);
                 if (!$doctor) {
                     return $this->json(['success' => false, 'message' => 'Doctor not found'], Response::HTTP_NOT_FOUND);
                 }
@@ -191,12 +192,18 @@ final class AppointmentController extends AbstractController
     private function appointmentToArray(Appointment $appointment): array
     {
         $doctor = $appointment->getDoctor();
+        $patient = $appointment->getPatient();
         return [
             'id' => $appointment->getId(),
             'date' => $appointment->getDate()?->format('Y-m-d'),
             'hourVisit' => $appointment->getHourVisit()?->format('H:i:s'),
             'reason' => $appointment->getReason(),
             'observations' => $appointment->getObservations(),
+            'patient' => $patient ? [
+                'id' => $patient->getId(),
+                'name' => $patient->getName(),
+                'dni' => $patient->getDni(),
+            ] : null,
             'doctor' => $doctor ? [
                 'id' => $doctor->getId(),
                 'name' => $doctor->getName(),

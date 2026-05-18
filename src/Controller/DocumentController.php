@@ -34,10 +34,11 @@ final class DocumentController extends AbstractController
 
         $originalName = $file->getClientOriginalName();
         $mimeType = $file->getMimeType();
+        $filename = uniqid() . '.' . $file->getClientOriginalExtension();
         $fileData = file_get_contents($file->getPathname());
 
         $document = new Document();
-        $document->setFilename(uniqid() . '.' . $file->getClientOriginalExtension());
+        $document->setFilename($filename);
         $document->setOriginalName($originalName);
         $document->setMimeType($mimeType);
         $document->setFileData($fileData);
@@ -87,8 +88,8 @@ final class DocumentController extends AbstractController
         }
 
         $fileData = $document->getFileData();
-        if (is_resource($fileData)) {
-            $fileData = stream_get_contents($fileData);
+        if (!$fileData) {
+            return $this->json(['success' => false, 'message' => 'File not found'], Response::HTTP_NOT_FOUND);
         }
 
         $response = new Response($fileData);
