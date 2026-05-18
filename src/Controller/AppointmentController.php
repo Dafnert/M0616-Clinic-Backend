@@ -200,9 +200,13 @@ final class AppointmentController extends AbstractController
             'reason' => $appointment->getReason(),
             'observations' => $appointment->getObservations(),
             'patient' => $patient ? [
-                'id' => $patient->getId(),
-                'name' => $patient->getName(),
-                'dni' => $patient->getDni(),
+                'id'       => $patient->getId(),
+                'name'     => $patient->getName(),
+                'surname'  => $patient->getSurname(),
+                'dni'      => $patient->getDni(),
+                'disease'  => $patient->getDisease(),
+                'alergias' => $patient->getAlergias(),
+                'isVih'    => strtolower((string) $patient->getDisease()) === 'vih',
             ] : null,
             'doctor' => $doctor ? [
                 'id' => $doctor->getId(),

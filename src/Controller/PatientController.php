@@ -188,10 +188,14 @@ final class PatientController extends AbstractController
             foreach ($patients as $patient) {
 
                 $data[] = [
-                    'id' => $patient->getId(),
-                    'name' => $patient->getName(),
-                    'age' => $patient->getAge(),
-                    'disease' => $patient->getDisease(),
+                    'id'       => $patient->getId(),
+                    'name'     => $patient->getName(),
+                    'surname'  => $patient->getSurname(),
+                    'age'      => $patient->getAge(),
+                    'dni'      => $patient->getDni(),
+                    'disease'  => $patient->getDisease(),
+                    'alergias' => $patient->getAlergias(),
+                    'isVih'    => strtolower((string) $patient->getDisease()) === 'vih',
                 ];
             }
 
