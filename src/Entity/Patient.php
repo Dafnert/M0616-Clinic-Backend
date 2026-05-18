@@ -40,7 +40,7 @@ class Patient
     #[ORM\Column(length: 255)]
     private ?string $observations = null;
 
-    #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'patient')]
+    #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'patient', cascade: ['remove'])]
     private Collection $appointments;
 
     public function __construct()
