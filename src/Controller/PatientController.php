@@ -151,6 +151,18 @@ final class PatientController extends AbstractController
             );
         }
 
+        // Borrar documentos del paciente
+        $documents = $entityManager->getRepository(\App\Entity\Document::class)->findBy(['patient' => $patient]);
+        foreach ($documents as $doc) {
+            $entityManager->remove($doc);
+        }
+
+        // Borrar odontogramas del paciente
+        $odontograms = $entityManager->getRepository(\App\Entity\Odontogram::class)->findBy(['patient' => $patient]);
+        foreach ($odontograms as $odontogram) {
+            $entityManager->remove($odontogram);
+        }
+
         $entityManager->remove($patient);
         $entityManager->flush();
 
