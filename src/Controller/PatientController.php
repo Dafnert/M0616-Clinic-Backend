@@ -19,40 +19,44 @@ final class PatientController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['name'], $data['age'], $data['username'], $data['password'])) {
-            return $this->json(
-                [
-                    'success' => false,
-                    'message' => 'Name, age, username, and password are required',
-                ],
-                Response::HTTP_BAD_REQUEST
-            );
+            return $this->json([
+                'success' => false,
+                'message' => 'Name, age, username, and password are required',
+            ], Response::HTTP_BAD_REQUEST);
         }
 
-        $patient = new Patient();
-        $patient->setName($data['name']);
-        $patient->setAge($data['age']);
-        $patient->setUsername($data['username']);
-        $patient->setPassword($data['password']);
+        try {
+            $patient = new Patient();
+            $patient->setName($data['name']);
+            $patient->setAge($data['age']);
+            $patient->setDni($data['dni']);
+            $patient->setUsername($data['username']);
+            $patient->setPassword($data['password']);
+            $patient->setDisease($data['disease'] ?? null);
+            $patient->setObservations($data['observations'] ?? null);
 
-        $entityManager->persist($patient);
-        $entityManager->flush();
+            $entityManager->persist($patient);
+            $entityManager->flush();
 
-        return $this->json(
-            [
+            return $this->json([
                 'success' => true,
                 'message' => 'Patient created successfully',
                 'patient' => [
-                    'id' => $patient->getId(),
-                    'name' => $patient->getName(),
-                    'surname' => $patient->getSurname(),
-                    'age' => $patient->getAge(),
+                    'id'       => $patient->getId(),
+                    'name'     => $patient->getName(),
+                    'age'      => $patient->getAge(),
+                    'dni'      => $patient->getDni(),
                     'username' => $patient->getUsername(),
-                    'dni' => $patient->getDni(),
-                    'disease' => $patient->getDisease(),
+                    'disease'  => $patient->getDisease(),
+                    'observations' => $patient->getObservations(),
                 ]
-            ],
-            Response::HTTP_CREATED
-        );
+            ], Response::HTTP_CREATED);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => $e->getMessage() // te mostrará el error real si algo más falla
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     #[Route('/patient/{id}', name: 'app_patient_read', methods: ['GET'], requirements: ['id' => '\d+'])]
