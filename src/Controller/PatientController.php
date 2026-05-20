@@ -28,12 +28,14 @@ final class PatientController extends AbstractController
         try {
             $patient = new Patient();
             $patient->setName($data['name']);
+            $patient->setSurname($data['surname'] ?? null);
             $patient->setAge($data['age']);
-            $patient->setDni($data['dni']);
+            $patient->setDni($data['dni'] ?? '');
             $patient->setUsername($data['username']);
             $patient->setPassword($data['password']);
             $patient->setDisease($data['disease'] ?? null);
-            $patient->setObservations($data['observations'] ?? null);
+            $patient->setAlergias($data['alergias'] ?? null);
+            $patient->setObservations($data['observations'] ?? '');
 
             $entityManager->persist($patient);
             $entityManager->flush();
@@ -188,10 +190,14 @@ final class PatientController extends AbstractController
             foreach ($patients as $patient) {
 
                 $data[] = [
-                    'id' => $patient->getId(),
-                    'name' => $patient->getName(),
-                    'age' => $patient->getAge(),
-                    'disease' => $patient->getDisease(),
+                    'id'       => $patient->getId(),
+                    'name'     => $patient->getName(),
+                    'surname'  => $patient->getSurname(),
+                    'age'      => $patient->getAge(),
+                    'dni'      => $patient->getDni(),
+                    'disease'  => $patient->getDisease(),
+                    'alergias' => $patient->getAlergias(),
+                    'isVih'    => strtolower((string) $patient->getDisease()) === 'vih',
                 ];
             }
 

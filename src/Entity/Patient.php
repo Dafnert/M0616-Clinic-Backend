@@ -33,8 +33,11 @@ class Patient
     #[ORM\Column(length: 255)]
     private ?string $password = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $disease = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $alergias = null;
 
 
     #[ORM\Column(length: 255)]
@@ -107,9 +110,17 @@ class Patient
     {
         return $this->disease;
     }
-    public function setDisease(string $disease): static
+    public function setDisease(?string $disease): static
     {
         $this->disease = $disease;
+
+        return $this;
+    }
+
+    public function getAlergias(): ?string { return $this->alergias; }
+    public function setAlergias(?string $alergias): static
+    {
+        $this->alergias = $alergias;
 
         return $this;
     }
