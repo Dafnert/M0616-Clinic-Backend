@@ -36,7 +36,8 @@ final class PatientController extends AbstractController
             $patient->setDisease($data['disease'] ?? null);
             $patient->setAlergias($data['alergias'] ?? null);
             $patient->setObservations($data['observations'] ?? '');
-
+            $patient->setAcceptedPrivacy($data['acceptedPrivacy'] ?? false);
+            $patient->setAcceptedAnesthesia($data['acceptedAnesthesia'] ?? false);
             $entityManager->persist($patient);
             $entityManager->flush();
 
@@ -50,7 +51,10 @@ final class PatientController extends AbstractController
                     'dni'      => $patient->getDni(),
                     'username' => $patient->getUsername(),
                     'disease'  => $patient->getDisease(),
+                    'alergias' => $patient->getAlergias(),
                     'observations' => $patient->getObservations(),
+                    'acceptedPrivacy' => $patient->getAcceptedPrivacy(),
+                    'acceptedAnesthesia' => $patient->getAcceptedAnesthesia(),
                 ]
             ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
@@ -88,6 +92,10 @@ final class PatientController extends AbstractController
                     'username' => $patient->getUsername(),
                     'dni' => $patient->getDni(),
                     'disease' => $patient->getDisease(),
+                    'alergias' => $patient->getAlergias(),
+                    'observations' => $patient->getObservations(),
+                    'acceptedPrivacy' => $patient->getAcceptedPrivacy(),
+                    'acceptedAnesthesia' => $patient->getAcceptedAnesthesia(),
                 ]
             ],
             Response::HTTP_OK
@@ -197,7 +205,11 @@ final class PatientController extends AbstractController
                     'dni'      => $patient->getDni(),
                     'disease'  => $patient->getDisease(),
                     'alergias' => $patient->getAlergias(),
+                    'observations' => $patient->getObservations(),
+                    'acceptedPrivacy' => $patient->getAcceptedPrivacy(),
+                    'acceptedAnesthesia' => $patient->getAcceptedAnesthesia(),
                     'isVih'    => strtolower((string) $patient->getDisease()) === 'vih',
+                    
                 ];
             }
 

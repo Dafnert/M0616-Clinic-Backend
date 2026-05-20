@@ -42,6 +42,11 @@ class Patient
 
     #[ORM\Column(length: 255)]
     private ?string $observations = null;
+    #[ORM\Column(type: 'boolean')]
+    private ?bool $acceptedPrivacy = false;
+
+    #[ORM\Column(type: 'boolean')]
+    private ?bool $acceptedAnesthesia = false;
 
     #[ORM\OneToMany(targetEntity: Appointment::class, mappedBy: 'patient', cascade: ['remove'])]
     private Collection $appointments;
@@ -173,4 +178,27 @@ class Patient
 
         return $this;
     }
+    public function getAcceptedPrivacy(): ?bool
+{
+    return $this->acceptedPrivacy;
+}
+
+public function setAcceptedPrivacy(bool $acceptedPrivacy): static
+{
+    $this->acceptedPrivacy = $acceptedPrivacy;
+
+    return $this;
+}
+
+public function getAcceptedAnesthesia(): ?bool
+{
+    return $this->acceptedAnesthesia;
+}
+
+public function setAcceptedAnesthesia(bool $acceptedAnesthesia): static
+{
+    $this->acceptedAnesthesia = $acceptedAnesthesia;
+
+    return $this;
+}
 }
