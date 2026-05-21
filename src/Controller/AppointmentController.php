@@ -119,7 +119,7 @@ final class AppointmentController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_appointment_update', methods: ['PUT'])]
-    public function update(int $id, Request $request, AppointmentRepository $appointmentRepository, EntityManagerInterface $entityManager): JsonResponse
+    public function update(int $id, Request $request, AppointmentRepository $appointmentRepository, EntityManagerInterface $entityManager, DoctorRepository $doctorRepository): JsonResponse
     {
         $appointment = $appointmentRepository->find($id);
 
@@ -144,6 +144,14 @@ final class AppointmentController extends AbstractController
             }
             if (isset($data['observations'])) {
                 $appointment->setObservations($data['observations']);
+            }
+
+            $doctorId = $data['doctorId'] ?? $data['doctor_id'] ?? null;
+            if ($doctorId) {
+                $doctor = $doctorRepository->find($doctorId);
+                if ($doctor) {
+                    $appointment->setDoctor($doctor);
+                }
             }
 
             $entityManager->flush();
