@@ -91,7 +91,8 @@ final class AppointmentController extends AbstractController
             $appointment->setHourVisit(new \DateTime($data['hourVisit']));
             $appointment->setReason($data['reason']);
             $appointment->setObservations($data['observations']);
-            $appointment->setPatient($patient);  // ← añadir
+            $appointment->setDuration($data['duration'] ?? 30);
+            $appointment->setPatient($patient);
 
             $doctorId = $data['doctor_id'] ?? $data['doctorId'] ?? null;
             if (!empty($doctorId)) {
@@ -154,6 +155,10 @@ final class AppointmentController extends AbstractController
                 }
             }
 
+            if (isset($data['duration'])) {
+                $appointment->setDuration($data['duration']);
+            }
+
             $entityManager->flush();
 
             return $this->json([
@@ -205,6 +210,7 @@ final class AppointmentController extends AbstractController
             'id' => $appointment->getId(),
             'date' => $appointment->getDate()?->format('Y-m-d'),
             'hourVisit' => $appointment->getHourVisit()?->format('H:i:s'),
+            'duration' => $appointment->getDuration(),
             'reason' => $appointment->getReason(),
             'observations' => $appointment->getObservations(),
             'patient' => $patient ? [
