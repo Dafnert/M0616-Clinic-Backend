@@ -28,6 +28,9 @@ class Appointment
     #[ORM\Column(length: 255)]
     private ?string $observations = null;
 
+    #[ORM\Column]
+    private int $duration = 30;
+
     #[ORM\ManyToOne(targetEntity: Doctor::class, inversedBy: 'appointments')]
     #[ORM\JoinColumn(nullable: true)]
     private ?Doctor $doctor = null;
@@ -97,6 +100,9 @@ class Appointment
 
         return $this;
     }
+
+    public function getDuration(): int { return $this->duration; }
+    public function setDuration(int $duration): static { $this->duration = $duration; return $this; }
 
     public function getDoctor(): ?Doctor
     {
