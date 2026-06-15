@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class PatientController extends AbstractController
 {
     #[Route('/patient', name: 'app_patient_create', methods: ['POST'])]
-    public function createPatient(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function createPatient(Request $request, PatientRepository $patientRepository, EntityManagerInterface $entityManager): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -23,6 +23,30 @@ final class PatientController extends AbstractController
                 'success' => false,
                 'message' => 'Name, age, username, and password are required',
             ], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Validar username único
+        if ($patientRepository->findOneBy(['username' => $data['username']])) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Username already exists',
+            ], Response::HTTP_CONFLICT);
+        }
+
+        // Validar nombre único
+        if ($patientRepository->findOneBy(['name' => $data['name']])) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Patient name already exists',
+            ], Response::HTTP_CONFLICT);
+        }
+
+        // Validar apellido único (si se proporciona)
+        if (!empty($data['surname']) && $patientRepository->findOneBy(['surname' => $data['surname']])) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Patient surname already exists',
+            ], Response::HTTP_CONFLICT);
         }
 
         try {
@@ -219,6 +243,62 @@ final class PatientController extends AbstractController
             return new JsonResponse([
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    #[Route('/patient/search', name: 'app_patient_search', methods: ['GET'])]
+    public function searchByName(Request $request, PatientRepository $patientRepository): JsonResponse
+    {
+        $name = $request->query->get('name');
+
+        if (!$name) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Name parameter is required',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $patients = $patientRepository->createQueryBuilder('p')
+                ->where('p.name LIKE :name OR p.surname LIKE :name')
+                ->setParameter('name', '%' . $name . '%')
+                ->getQuery()
+                ->getResult();
+
+            if (empty($patients)) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'No patients found',
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            $data = [];
+            foreach ($patients as $patient) {
+                $data[] = [
+                    'id'       => $patient->getId(),
+                    'name'     => $patient->getName(),
+                    'surname'  => $patient->getSurname(),
+                    'age'      => $patient->getAge(),
+                    'dni'      => $patient->getDni(),
+                    'disease'  => $patient->getDisease(),
+                    'alergias' => $patient->getAlergias(),
+                    'observations' => $patient->getObservations(),
+                    'acceptedPrivacy' => $patient->getAcceptedPrivacy(),
+                    'acceptedAnesthesia' => $patient->getAcceptedAnesthesia(),
+                    'isVih'    => strtolower((string) $patient->getDisease()) === 'vih',
+                ];
+            }
+
+            return $this->json([
+                'success' => true,
+                'count' => count($data),
+                'patients' => $data,
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

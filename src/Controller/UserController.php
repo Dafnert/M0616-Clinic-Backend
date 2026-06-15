@@ -150,9 +150,33 @@ final class UserController extends AbstractController
     }
 
     #[Route('', name: 'app_user_create', methods: ['POST'])]
-    public function createuser(Request $request, EntityManagerInterface $em): JsonResponse
+    public function createuser(Request $request, UserRepository $userRepository, EntityManagerInterface $em): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
+
+        // Validar que los campos requeridos estén presentes
+        if (empty($data['name']) || empty($data['username']) || empty($data['password'])) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Name, username and password are required'
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Validar username único
+        if ($userRepository->findOneBy(['username' => $data['username']])) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Username already exists'
+            ], Response::HTTP_CONFLICT);
+        }
+
+        // Validar nombre único
+        if ($userRepository->findOneBy(['name' => $data['name']])) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Name already exists'
+            ], Response::HTTP_CONFLICT);
+        }
 
         $user = new User();
         $user->setName($data['name']);
@@ -166,12 +190,16 @@ final class UserController extends AbstractController
         $em->persist($user);
         $em->flush();
 
-        return new JsonResponse([
-            'id'       => $user->getId(),
-            'name'     => $user->getName(),
-            'username' => $user->getUsername(),
-            'role'     => $user->getRole(),
-        ], 201);
+        return $this->json([
+            'success' => true,
+            'message' => 'User created successfully',
+            'data' => [
+                'id'       => $user->getId(),
+                'name'     => $user->getName(),
+                'username' => $user->getUsername(),
+                'role'     => $user->getRole(),
+            ]
+        ], Response::HTTP_CREATED);
     }
 
     #[Route('/{id}', name: 'app_user_delete', methods: ['DELETE'])]
